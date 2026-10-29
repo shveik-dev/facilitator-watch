@@ -1,6 +1,6 @@
 # Facilitator Watch
 
-A small Go + SQLite monitor that records what eight fixed [x402](https://docs.x402.org)
+A small Go + SQLite monitor that records what nine fixed [x402](https://docs.x402.org)
 payment facilitators **declare** at `GET /supported`, and how that declaration
 changes over time.
 
@@ -15,7 +15,7 @@ It is not a continuously running public deployment.*
 ## What it is, and is not
 
 Facilitator Watch watches declarations. It does not verify payments, settlement,
-extension behavior or uptime, and it will not monitor arbitrary URLs. Exactly eight
+extension behavior or uptime, and it will not monitor arbitrary URLs. Exactly nine
 targets are compiled in, and `GET /supported` is the only request it makes:
 
 | Facilitator | Requested URL |
@@ -27,6 +27,7 @@ targets are compiled in, and `GET /supported` is the only request it makes:
 | Polygon | `https://x402.polygon.technology/supported` |
 | NEAR x402 | `https://x402.mikedotexe.com/supported` |
 | Meridian | `https://api.mrdn.finance/v1/supported` |
+| Casper | `https://x402-facilitator.cspr.cloud/supported` |
 | Coinbase CDP (optional auth) | `https://api.cdp.coinbase.com/platform/v2/x402/supported` |
 
 The targets are selected from the
@@ -37,7 +38,7 @@ or proxies.
 
 Coinbase CDP alone accepts optional read-only Ed25519 JWT authentication. Without
 a key it is skipped and shows a configuration note, not a failed or fabricated
-check. The other seven targets are requested anonymously. Polygon and Meridian
+check. The other eight targets are requested anonymously. Polygon and Meridian
 both returned valid declarations without authentication during deployment;
 future errors are retained honestly.
 MPP is not monitored. See [provider sources](SPEC.md#provider-sources).
@@ -68,7 +69,7 @@ sh ./dev.sh serve        # http://127.0.0.1:8501 (local preview, not public URL)
 ```
 
 `serve` publishes only host loopback, uses a throwaway in-container database, and
-maps all eight provider hostnames to the container's own loopback. Polling therefore
+maps all nine provider hostnames to the container's own loopback. Polling therefore
 fails locally and the page shows failed checks, never real provider traffic.
 
 ### Optional live monitoring
@@ -158,7 +159,7 @@ only the latest bounded slice of that window, not full history.
 
 ## Status and limitations
 
-Early-stage software. Only the eight fixed targets and `GET /supported` are
+Early-stage software. Only the nine fixed targets and `GET /supported` are
 implemented. There is no inbound authentication, automatic retention or storage quota, so
 the database grows with retained history. Failure backoff lives in memory, so a
 restart polls immediately. Tests use mocked transports and temporary SQLite files;

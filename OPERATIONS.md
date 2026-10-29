@@ -24,7 +24,7 @@ Rollback is: stop the service, restore the previous binary, start, verify.
 
 ## Safety rules
 
-- Collection is `GET /supported` against the eight fixed targets in README only. There is no
+- Collection is `GET /supported` against the nine fixed targets in README only. There is no
   fixture mode, endpoint override, manual refresh or request-triggered poll.
 - Do not probe the providers by hand to "check" the service; every restart already
   polls immediately.
@@ -47,6 +47,7 @@ The source-owned collection targets are:
 | polygon | `https://x402.polygon.technology/supported` |
 | near-x402 | `https://x402.mikedotexe.com/supported` |
 | meridian | `https://api.mrdn.finance/v1/supported` |
+| casper | `https://x402-facilitator.cspr.cloud/supported` |
 | coinbase-cdp | `https://api.cdp.coinbase.com/platform/v2/x402/supported` |
 
 No MPP collection. Polygon and Meridian returned valid anonymous declarations
@@ -55,7 +56,7 @@ remain failures. No additional credentials or relaxed parsing are permitted.
 
 | Command | Provider traffic | Database |
 | --- | --- | --- |
-| `sh ./dev.sh serve` | None: all eight hostnames are sinkholed to container loopback | Temporary, in RAM |
+| `sh ./dev.sh serve` | None: all nine hostnames are sinkholed to container loopback | Temporary, in RAM |
 | `sh ./dev.sh serve-once` | One `GET /supported` per enabled target, no retries or periodic polling | Temporary, in RAM |
 
 Both publish only `127.0.0.1:8501` and disable container-to-host-loopback access.
@@ -144,7 +145,7 @@ and obtain certificates in a way that does not disturb other sites on the host.
 
 ### Optional CDP credential and rollout preconditions
 
-Without a CDP key file, the other seven targets collect anonymously; CDP has no
+Without a CDP key file, the other eight targets collect anonymously; CDP has no
 attempts and shows a configuration note. All collection shares two request slots,
 with independent per-target backoff and eight-second timeouts after slot acquisition.
 `-once` attempts each enabled target at most once and joins all schedulers.
@@ -171,7 +172,7 @@ review the target/auth diff, stop and back up the existing service/SQLite sideca
 arrange a reviewed rollback binary, and verify credential provisioning without
 printing its contents. Adding targets keeps SQLite version 2 and upserts only
 metadata; old evidence survives. An older binary ignores extra IDs without
-deleting their history. A restart begins up to seven anonymous requests (eight
+deleting their history. A restart begins up to eight anonymous requests (nine
 with CDP configured), capped at two in flight. Do not restart under prior
 two-provider or one-pass permission. This implementation does not activate them.
 
@@ -192,7 +193,7 @@ For local process diagnostics only, use the same paths at
 `http://127.0.0.1:8501` on the host. This internal backend bypasses DNS, TLS and
 the proxy, so success there does not verify the public endpoint.
 
-- `/api/v1/facilitators` lists eight targets, `pending` with empty evidence until
+- `/api/v1/facilitators` lists nine targets, `pending` with empty evidence until
   their first check completes, then real results.
 - A reachable HTTP error can coexist with an `unavailable` declaration. An absent
   or invalid `/supported` shows as a failure, never as synthetic success.

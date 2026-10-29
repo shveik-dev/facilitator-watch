@@ -32,6 +32,7 @@ func targets() []FacilitatorTarget {
 		{"polygon", "Polygon", "https://x402.polygon.technology"},
 		{"near-x402", "NEAR x402", "https://x402.mikedotexe.com"},
 		{"meridian", "Meridian", "https://api.mrdn.finance/v1"},
+		{"casper", "Casper", "https://x402-facilitator.cspr.cloud"},
 		{"coinbase-cdp", "Coinbase CDP", "https://api.cdp.coinbase.com/platform/v2/x402"},
 	}
 }

@@ -4,7 +4,7 @@
 
 Go 1.23+, pure-Go modernc.org/sqlite v1.38.2, vendored dependencies, embedded
 HTML/CSS/JS and a local icon. Only web/page.html, web/style.css, web/app.js and web/favicon.ico are embedded;
-source-only design mockups are excluded. No production fixtures. Eight fixed source-owned target
+source-only design mockups are excluded. No production fixtures. Nine fixed source-owned target
 bases (including API prefixes) in `targets()`, as listed in the README. Only GET `/supported`; no
 arbitrary URLs, redirects, environment proxies, payments,
 verification, settlement or discovery. TLS certificate verification stays on.
@@ -22,7 +22,7 @@ body reads at one MiB plus one sentinel byte. Stored bodies never exceed one
 MiB; oversize is a failed check with a truncation note. Max 256 kind/extension
 entries. No cookies. Only Coinbase CDP may receive an Authorization header,
 signed using the optional Ed25519 CDP key file, scoped to its exact fixed HTTPS
-GET URL without query. No credentials on the other seven targets. User-Agent identifies the app,
+GET URL without query. No credentials on the other eight targets. User-Agent identifies the app,
 and passive scope (see `userAgent` in collector.go). No HTTP retry on reused connections.
 
 Failure delays: 1, 2, 4, 8, 16, 30 minutes, capped thereafter. For 429/503,
@@ -269,6 +269,7 @@ OPERATIONS.md; documentation claims alone never create live evidence.
 | Polygon | [Seller quickstart](https://docs.polygon.technology/payment-services/agentic-payments/x402/guides/quickstart-sellers/), SDK `/supported` path; valid anonymous response observed during deployment |
 | NEAR x402 | [Reference access](https://github.com/fastnear/x402-facilitator/blob/main/docs/reference-access.md), public mainnet |
 | Meridian | [Supported payments](https://docs.mrdn.finance/api-reference/endpoint/supported-payments.md), exact `/v1` prefix; valid anonymous response observed despite conflicting OpenAPI security annotations |
+| Casper | [CSPR.cloud docs](https://docs.cspr.cloud), public `/supported` and `/health`; `/verify` and `/settle` require an API key and are never requested |
 | Coinbase CDP | [Supported API](https://docs.cdp.coinbase.com/api-reference/v2/rest-api/x402-facilitator/get-supported-payment-schemes-and-networks), optional read-only JWT configuration |
 
 HTTP 401 and invalid response shapes remain failures. No relaxed v2 parsing,

@@ -579,7 +579,7 @@ func TestCollectorOnce(t *testing.T) {
 			s := testStore(t)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			requests := make(chan string, 7)
+			requests := make(chan string, len(targets()))
 			client := newPollClient()
 			client.Transport = roundTripFunc(func(r *http.Request) (*http.Response, error) {
 				requests <- r.Method + " " + r.URL.String()

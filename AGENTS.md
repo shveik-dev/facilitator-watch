@@ -1,6 +1,6 @@
 # Working on Facilitator Watch
 
-This is a SQLite-backed app for passive monitoring of eight fixed x402
+This is a SQLite-backed app for passive monitoring of nine fixed x402
 HTTPS targets in `targets()`. Commit, push or deploy only with explicit maintainer
 authorization. No wallets or paid services.
 The sole credential exception is an optional Coinbase CDP Ed25519 key file for
@@ -26,7 +26,7 @@ operations in rootless Podman. Use `dev.sh`: `--pull=never`, `--read-only`,
 inside Podman using the public module proxy/checksum service; it never runs
 the app. `serve` is the browser-preview exception: rootless slirp publishes only
 host loopback port 8501, blocks container-to-host-loopback access, and maps the
-all eight fixed provider hostnames to container loopback so preview polling cannot
+all nine fixed provider hostnames to container loopback so preview polling cannot
 reach them. Do not remove those restrictions from ordinary `serve`.
 The explicit maintainer-authorized `serve-once` exception is operator-activated only:
 omit provider sinkholes for one initial pass with `-once`, no retries or

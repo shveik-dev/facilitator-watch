@@ -58,6 +58,7 @@ if [ "$action" = serve ]; then
     --add-host=x402.polygon.technology:127.0.0.1 \
     --add-host=x402.mikedotexe.com:127.0.0.1 \
     --add-host=api.mrdn.finance:127.0.0.1 \
+    --add-host=x402-facilitator.cspr.cloud:127.0.0.1 \
     --add-host=api.cdp.coinbase.com:127.0.0.1
 fi
 set -- "$@" "$image"

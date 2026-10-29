@@ -22,6 +22,7 @@ func TestFixedProviderURLs(t *testing.T) {
 		{"polygon", "https://x402.polygon.technology/supported"},
 		{"near-x402", "https://x402.mikedotexe.com/supported"},
 		{"meridian", "https://api.mrdn.finance/v1/supported"},
+		{"casper", "https://x402-facilitator.cspr.cloud/supported"},
 		{"coinbase-cdp", coinbaseSupportedURL},
 	}
 	if len(targets()) != len(want) {
@@ -61,13 +62,13 @@ func TestProviderAuthScopeAndSkip(t *testing.T) {
 		}
 	}
 	cdp, _ := targetByID("coinbase-cdp")
-	if _, err := collect(context.Background(), cdp, client); err == nil || calls != 8 {
+	if _, err := collect(context.Background(), cdp, client); err == nil || calls != 9 {
 		t.Fatal("unconfigured CDP attempted")
 	}
 	for _, base := range []string{cdp.Endpoint + "/extra", cdp.Endpoint + "?query=1", "https://api.cdp.coinbase.com"} {
 		bad := cdp
 		bad.Endpoint = base
-		if _, err := collect(context.Background(), bad, client, key); err == nil || calls != 8 {
+		if _, err := collect(context.Background(), bad, client, key); err == nil || calls != 9 {
 			t.Fatal("prefix escape")
 		}
 	}
@@ -76,6 +77,53 @@ func TestProviderAuthScopeAndSkip(t *testing.T) {
 	}
 	if _, err := collectionKey(true, filepath.Join(t.TempDir(), "does-not-exist")); err == nil {
 		t.Fatal("invalid configuration accepted")
+	}
+}
+
+// Captured from the anonymous Casper GET /supported on 2026-10-29; test input only.
+const casperSupported = `{"kinds":[{"x402Version":2,"scheme":"exact","network":"casper:casper","extra":{"feePayer":"d8af1dc245e14a56157c171c614eb099d8aa7ea69f485fe6d48719123c90b033"}},{"x402Version":2,"scheme":"exact","network":"casper:casper-test","extra":{"feePayer":"81d557c9dcaadea97c34d79bf7b6af07aa9d760e5dd1aabf78a45fb39e072c3a"}}],"extensions":[],"signers":{"casper:*":["d8af1dc245e14a56157c171c614eb099d8aa7ea69f485fe6d48719123c90b033","81d557c9dcaadea97c34d79bf7b6af07aa9d760e5dd1aabf78a45fb39e072c3a"]}}`
+
+func TestCasperAnonymousDeclaration(t *testing.T) {
+	ctx := context.Background()
+	target, ok := targetByID("casper")
+	if !ok {
+		t.Fatal("casper target missing")
+	}
+	client := newPollClient()
+	calls := 0
+	client.Transport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		calls++
+		if req.Method != http.MethodGet || req.URL.String() != "https://x402-facilitator.cspr.cloud/supported" || req.Header.Get("Authorization") != "" {
+			t.Error("unexpected Casper request")
+		}
+		return mockResponse(200, casperSupported), nil
+	})
+	r, err := collect(ctx, target, client)
+	if err != nil || !r.Valid || calls != 1 || string(r.Raw) != casperSupported {
+		t.Fatalf("casper collection: %v %+v", err, r)
+	}
+	s := mustParse(t, casperSupported)
+	want := []string{"casper:casper", "casper:casper-test"}
+	if len(s.Kinds) != len(want) || len(s.Extensions) != 0 || s.Signers == nil || len((*s.Signers)["casper:*"]) != 2 {
+		t.Fatal("casper declaration shape")
+	}
+	for i, k := range s.Kinds {
+		if k.X402Version != 2 || k.Scheme != "exact" || k.Network != want[i] || !strings.Contains(string(k.Extra), `"feePayer"`) {
+			t.Fatalf("casper tuple %d", i)
+		}
+	}
+	store := testStore(t)
+	if err := store.record(ctx, target, r); err != nil {
+		t.Fatal(err)
+	}
+	f, err := store.Get(ctx, "casper")
+	if err != nil || f.Check.Status != "operational" || f.ConfigurationNote != "" || string(f.SupportedEvidence.Raw) != casperSupported || len(f.Capabilities) != 2 {
+		t.Fatalf("casper evidence: %v", err)
+	}
+	for i, c := range f.Capabilities {
+		if c.State != "present" || c.Facet.Category != "kind" || !strings.HasPrefix(c.Facet.Value, "v2 · exact · casper:casper") {
+			t.Fatalf("casper capability %d: %+v", i, c.Facet)
+		}
 	}
 }
 
@@ -107,7 +155,7 @@ func TestAllProvidersOnceGlobalCap(t *testing.T) {
 		return mockResponse(200, emptySnapshot), nil
 	})
 	runCollector(ctx, s, client, true, key)
-	if ctx.Err() != nil || maximum.Load() != 2 || active.Load() != 0 || len(seen) != 8 {
+	if ctx.Err() != nil || maximum.Load() != 2 || active.Load() != 0 || len(seen) != 9 {
 		t.Fatal("global concurrency/once contract")
 	}
 	for _, target := range targets() {
@@ -116,7 +164,7 @@ func TestAllProvidersOnceGlobalCap(t *testing.T) {
 		}
 	}
 	var count int
-	if err := s.db.QueryRow("SELECT count(*) FROM checks").Scan(&count); err != nil || count != 8 {
+	if err := s.db.QueryRow("SELECT count(*) FROM checks").Scan(&count); err != nil || count != 9 {
 		t.Fatal("missing completed checks", err)
 	}
 }
@@ -142,7 +190,7 @@ func TestProviderReopenPreservesOldEvidence(t *testing.T) {
 	}
 	defer s.Close()
 	items, err := s.List(ctx)
-	if err != nil || len(items) != 8 {
+	if err != nil || len(items) != 9 {
 		t.Fatal("new inventory", err)
 	}
 	for _, f := range items {
@@ -159,7 +207,7 @@ func TestProviderReopenPreservesOldEvidence(t *testing.T) {
 			t.Fatal("missing config note")
 		}
 	}
-	if got := summarize(items); got.Total != 8 || got.Operational != 1 || got.Pending != 7 {
+	if got := summarize(items); got.Total != 9 || got.Operational != 1 || got.Pending != 8 {
 		t.Fatal("summary inventory")
 	}
 	cdp, _ := targetByID("coinbase-cdp")
@@ -264,7 +312,7 @@ func TestRemovedTargetRetainedRowsStayPrivate(t *testing.T) {
 		}
 	}
 	items, err := s.List(ctx)
-	if err != nil || summarize(items).Total != 8 || summarize(items).Operational != 1 {
+	if err != nil || summarize(items).Total != 9 || summarize(items).Operational != 1 {
 		t.Fatal("inventory or surviving evidence changed", err)
 	}
 	client := newPollClient()
